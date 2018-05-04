@@ -1,5 +1,5 @@
 package com.fulcrumvm.eljclient.model;
 
-public class Response<T> {
+public class Result<T> {
     public T Data;
 }
