@@ -56,6 +56,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     private UserLoginTask mAuthTask = null;
     //My First Comment
+    //My Second Comment
 
     // UI references.
     private AutoCompleteTextView mEmailView;
