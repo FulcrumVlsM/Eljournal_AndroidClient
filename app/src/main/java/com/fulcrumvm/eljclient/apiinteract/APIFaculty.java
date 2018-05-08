@@ -10,7 +10,10 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 
-public interface APIService {
+public interface APIFaculty {
     @GET("/api/Faculties/{id}")
-    Call<Result<Faculty>> getData(@Path("id") String facultyId);
+    Call<Result<Faculty>> GetFaculty(@Path("id") String facultyId);
+
+    @GET("/api/Faculties")
+    Call<Result<List<Faculty>>> GetFaculties();
 }
