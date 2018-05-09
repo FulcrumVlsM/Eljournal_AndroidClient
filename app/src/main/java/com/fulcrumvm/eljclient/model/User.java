@@ -12,4 +12,9 @@ public class User {
 
     public List<Department> Departments;
     public List<Faculty> Faculties;
+
+    @Override
+    public String toString() {
+        return String.format("%s %s %s", Surname, Name, Patronymic);
+    }
 }

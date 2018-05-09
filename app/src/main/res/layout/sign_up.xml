@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    tools:context=".fragments.SignUpFragment">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Выберите пользователя"/>
+            <com.toptoche.searchablespinnerlibrary.SearchableSpinner
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:id="@+id/person_input_spinner">
+
+            </com.toptoche.searchablespinnerlibrary.SearchableSpinner>
+        </LinearLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/secret_word_input"
+                android:hint="Repeat Password"
+                android:inputType="textPassword"/>
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp">
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/login_create_input"
+                android:hint="Создайте логин"
+                android:inputType="textCapWords"/>
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/password_create_input"
+                android:hint="Создайте пароль"
+                android:inputType="textPassword"/>
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/password_repeat_input"
+                android:hint="Повторите пароль"
+                android:inputType="textPassword"/>
+        </android.support.design.widget.TextInputLayout>
+
+        <com.dd.processbutton.iml.ActionProcessButton
+            android:id="@+id/sign_up_submit_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Регистрация"
+            custom:pb_textError="Неверные данные"
+            custom:pb_textProgress="Подождите..."
+            android:textColor="@android:color/white"
+            custom:pb_colorNormal="@android:color/holo_blue_light"
+            custom:pb_colorPressed="@android:color/holo_blue_dark" />
+
+    </LinearLayout>
+
+
+</ScrollView>
