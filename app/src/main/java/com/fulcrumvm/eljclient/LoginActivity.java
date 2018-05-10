@@ -31,15 +31,22 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.dd.processbutton.iml.ActionProcessButton;
+import com.fulcrumvm.eljclient.apiinteract.APIAccount;
 import com.fulcrumvm.eljclient.fragments.LoginFragment;
 import com.fulcrumvm.eljclient.fragments.SignInFragment;
 import com.fulcrumvm.eljclient.fragments.SignUpFragment;
 import com.fulcrumvm.eljclient.model.Account;
+import com.fulcrumvm.eljclient.model.Result;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -50,7 +57,8 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class LoginActivity extends AppCompatActivity
         implements SignUpFragment.OnSignUpFragmentInteractionListener,
-        LoginFragment.OnLoginFragmentInteractionListener{
+        LoginFragment.OnLoginFragmentInteractionListener,
+        SignInFragment.OnSignInFragmentInteractionListener{
 
     private static final int REQUEST_READ_CONTACTS = 0;
 
@@ -87,17 +95,14 @@ public class LoginActivity extends AppCompatActivity
 
 
     //Событие, когда пользователь отправляет данные для регистрации
-    @Override
-    public boolean OnSubmit(Account newAccount) {
-        return false;
-    }
+
 
     //обработка перехода на страницу авторизации
     @Override
     public void onSignIn() {
         fTransact = getSupportFragmentManager().beginTransaction();
         if(fTransact != null){
-            fTransact.replace(R.id.login_main,signInFragment);
+            fTransact.replace(R.id.login_main, signInFragment);
             fTransact.addToBackStack(null);
             fTransact.commit();
         }
@@ -119,19 +124,55 @@ public class LoginActivity extends AppCompatActivity
     }
 
 
-    private class RegistrationAsyncTask extends AsyncTask<Account,Integer,Boolean>{
+    //вызывается фрагментом, выполняет регистрацию нового аккаунта
+    @Override
+    public void SignUp(Account newAccount, final ActionProcessButton submitButton) {
+        Retrofit retrofit = new Retrofit.Builder().baseUrl("http://eljournal.ddns.net")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        APIAccount accountService = retrofit.create(APIAccount.class);
+        accountService.AddAccount(newAccount).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if(response.isSuccessful()){
+                    submitButton.setProgress(100);
+                    //TODO: автоматически логиним пользователя по созданному аккаунту, отдаем результат и закрываем активность
+                }
+                else{
+                    submitButton.setProgress(-1);
+                }
+            }
 
-        @Override
-        protected Boolean doInBackground(Account... accounts) {
-            return false;
-        }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                submitButton.setProgress(-1);
+                Toast.makeText(getApplicationContext(),"Нет связи с сервером",Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-        }
+    @Override
+    public void SignIn(Account account, final ActionProcessButton submitButton) {
+        Retrofit retrofit = new Retrofit.Builder().baseUrl("http://eljournal.ddns.net")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        APIAccount accountService = retrofit.create(APIAccount.class);
+        accountService.Auth(account).enqueue(new Callback<Result<String>>() {
+            @Override
+            public void onResponse(Call<Result<String>> call, Response<Result<String>> response) {
+                if(response.isSuccessful()){
+                    submitButton.setProgress(100);
+                    //TODO: здесь нужно прописать передачу токена и логина с паролем в preferences и закрытие активности
+                }
+                else
+                    submitButton.setProgress(-1);
+            }
 
-
+            @Override
+            public void onFailure(Call<Result<String>> call, Throwable t) {
+                submitButton.setProgress(-1);
+            }
+        });
     }
 }
 

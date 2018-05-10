@@ -9,5 +9,8 @@ import retrofit2.http.POST;
 
 public interface APIAccount {
     @POST("/api/Account")
-    Call<Result<Account>> AddAccount(@Body Account newAccount);
+    Call<Void> AddAccount(@Body Account newAccount);
+
+    @POST("/api/Account/auth")
+    Call<Result<String>> Auth(@Body Account account);
 }

@@ -20,12 +20,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Выберите пользователя"/>
+                android:text="Найдите себя в списке пользователей"/>
             <com.toptoche.searchablespinnerlibrary.SearchableSpinner
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:id="@+id/person_input_spinner">
-
             </com.toptoche.searchablespinnerlibrary.SearchableSpinner>
         </LinearLayout>
 
@@ -38,7 +37,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/secret_word_input"
-                android:hint="Repeat Password"
+                android:hint="Введите ваше секретное слово"
                 android:inputType="textPassword"/>
         </android.support.design.widget.TextInputLayout>
 
@@ -51,7 +50,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/login_create_input"
-                android:hint="Создайте логин"
+                android:hint="Введите email"
                 android:inputType="textCapWords"/>
         </android.support.design.widget.TextInputLayout>
 
@@ -86,8 +85,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Регистрация"
-            custom:pb_textError="Неверные данные"
-            custom:pb_textProgress="Подождите..."
             android:textColor="@android:color/white"
             custom:pb_colorNormal="@android:color/holo_blue_light"
             custom:pb_colorPressed="@android:color/holo_blue_dark" />

@@ -77,12 +77,13 @@ public class SignUpFragment extends Fragment implements View.OnClickListener{
 
         loginEditText = v.findViewById(R.id.login_create_input);
         passwordEditText = v.findViewById(R.id.password_create_input);
-        passwordEditText = v.findViewById(R.id.password_repeat_input);
-        passwordRepeatEditText = v.findViewById(R.id.secret_word_input);
+        passwordRepeatEditText = v.findViewById(R.id.password_repeat_input);
         secretWordEditText = v.findViewById(R.id.secret_word_input);
         submitButton = v.findViewById(R.id.sign_up_submit_button);
 
         submitButton.setOnClickListener(this);
+        submitButton.setErrorText("Ошибка");
+        submitButton.setCompleteText("Успешно!");
 
         //задаю кнопке стиль бесконечной загрузки
         submitButton.setMode(ActionProcessButton.Mode.ENDLESS);
@@ -111,42 +112,35 @@ public class SignUpFragment extends Fragment implements View.OnClickListener{
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.sign_up_submit_button){
-            submitButton.setProgress(50);
-
+        if (v.getId() == R.id.sign_up_submit_button) {
             Account newAccount = new Account();
             newAccount.Secret = secretWordEditText.getText().toString();
-            newAccount.Login = loginEditText.getText().toString();
+            newAccount.Email = loginEditText.getText().toString();
             newAccount.Password = passwordEditText.getText().toString();
-            User selectedUser = (User)userSpinner.getSelectedItem();
-            newAccount.PersonID = selectedUser.ID;
 
             String repPassword = passwordRepeatEditText.getText().toString();
-            if(newAccount.Password.compareTo(repPassword) == 0){
-                boolean result = mListener.OnSubmit(newAccount);
-                AsyncTask<String,String,String> asyncTask = new AsyncTask<String, String, String>() {
-                    @Override
-                    protected String doInBackground(String... strings) {
-                        try{
-                            Thread.sleep(2000);
-                        }
-                        catch(InterruptedException e){}
-                        return null;
-                    }
+            User selectedUser = (User) userSpinner.getSelectedItem();
 
-                    @Override
-                    protected void onPostExecute(String s) {
-                        submitButton.setProgress(-1);
-                    }
-                };
-                asyncTask.execute("1");
+            if(selectedUser == null){
+                Toast.makeText(getContext(),"Пользователь не указан",Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            if (newAccount.Password.compareTo(repPassword) != 0){
+                Toast.makeText(getContext(),"Пароли не совпадают",Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            submitButton.setProgress(50);
+            newAccount.PersonID = selectedUser.ID;
+            if(mListener != null)
+                mListener.SignUp(newAccount, submitButton);
         }
     }
 
 
     public interface OnSignUpFragmentInteractionListener {
-        boolean OnSubmit(Account newAccount);
+        void SignUp(Account newAccount, ActionProcessButton submitButton);
     }
 
 
