@@ -2,6 +2,8 @@ package com.fulcrumvm.eljclient;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -30,6 +32,7 @@ import com.fulcrumvm.eljclient.apiinteract.APIFaculty;
 import com.fulcrumvm.eljclient.fragments.HomePageFragment;
 import com.fulcrumvm.eljclient.model.Faculty;
 import com.fulcrumvm.eljclient.model.Result;
+import com.fulcrumvm.eljclient.model.User;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -40,12 +43,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private Retrofit retrofit;
+    private User user;
 
     ViewPager pager;
     PagerAdapter pagerAdapter;
 
     Fragment homeFragment;
     FragmentTransaction fTrans;
+
+    private final int LOGIN_REQUEST_CODE = 1335;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,14 +79,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        homeFragment = HomePageFragment.newInstance();
+        if(getLogin() == null || getPassword() == null || getToken() == null){
+            Intent intent = new Intent(this,LoginActivity.class);
+            startActivityForResult(intent,LOGIN_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        homeFragment = HomePageFragment.newInstance(getToken());
         fTrans = getSupportFragmentManager().beginTransaction();
         fTrans.add(R.id.root_content_layout, homeFragment);
         fTrans.commit();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
 
-
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
 
     public void onClick(View v){
         retrofit = new Retrofit.Builder().baseUrl("http://eljournal.ddns.net")
@@ -106,11 +129,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        // Handle navigation view item clicks here.
         int id = item.getItemId();
 
         if (id == R.id.nav_student) {
-            // Handle the camera action
+
         } else if (id == R.id.nav_home) {
 
         } else if (id == R.id.nav_message) {
@@ -122,18 +144,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_help) {
 
         } else if (id == R.id.nav_logout){
-
+            logOut();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
     }
 
 
@@ -148,5 +164,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("MainActivity", "Сработал OnActivityResult");
+        if(requestCode == LOGIN_REQUEST_CODE){
+            if(resultCode != RESULT_OK || data == null)
+                finish();
 
+            String login = data.getStringExtra("login");
+            String password = data.getStringExtra("password");
+            String token = data.getStringExtra("token");
+
+            if(login == null && password == null && token == null)
+                finish();
+
+            SharedPreferences.Editor editor = getPreferences(MODE_PRIVATE).edit();
+            editor.putString("login", login);
+            editor.putString("password", password);
+            editor.putString("token", token);
+            editor.commit();
+            recreate();
+        }
+    }
+
+
+    private String getLogin(){
+        return getPreferences(MODE_PRIVATE).getString("login", null);
+    }
+    private String getPassword(){
+        return getPreferences(MODE_PRIVATE).getString("password", null);
+    }
+    private String getToken(){
+        return getPreferences(MODE_PRIVATE).getString("token", null);
+    }
+
+    private void logOut(){
+        SharedPreferences.Editor editor = getPreferences(MODE_PRIVATE).edit();
+        editor.clear();
+        editor.commit();
+        recreate();
+    }
 }

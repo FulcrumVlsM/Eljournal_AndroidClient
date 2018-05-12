@@ -3,6 +3,7 @@ package com.fulcrumvm.eljclient;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -68,6 +69,19 @@ public class LoginActivity extends AppCompatActivity
 
     private FragmentTransaction fTransact;
 
+    private String _login;
+    private String _password;
+    private String _token;
+
+    private void goToMain(){
+        Intent intent = new Intent();
+        intent.putExtra("login",_login);
+        intent.putExtra("password", _password);
+        intent.putExtra("token", _token);
+        setResult(RESULT_OK,intent);
+        finish();
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,18 +97,6 @@ public class LoginActivity extends AppCompatActivity
         fTransact.commit();
     }
 
-    /**
-     * Callback received when a permissions request has been completed.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-
-    }
-
-
-
-    //Событие, когда пользователь отправляет данные для регистрации
 
 
     //обработка перехода на страницу авторизации
@@ -151,8 +153,9 @@ public class LoginActivity extends AppCompatActivity
         });
     }
 
+    //вызывается фрагментом, выполняет авторизацию
     @Override
-    public void SignIn(Account account, final ActionProcessButton submitButton) {
+    public void SignIn(final Account account, final ActionProcessButton submitButton) {
         Retrofit retrofit = new Retrofit.Builder().baseUrl("http://eljournal.ddns.net")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
@@ -161,18 +164,38 @@ public class LoginActivity extends AppCompatActivity
             @Override
             public void onResponse(Call<Result<String>> call, Response<Result<String>> response) {
                 if(response.isSuccessful()){
+                    _token = response.body().Data;
+                    _login = account.Email;
+                    _password = account.Password;
                     submitButton.setProgress(100);
-                    //TODO: здесь нужно прописать передачу токена и логина с паролем в preferences и закрытие активности
+
+                    Intent intent = new Intent();
+                    intent.putExtra("login", _login);
+                    intent.putExtra("password", _password);
+                    intent.putExtra("token", _token);
+                    setResult(RESULT_OK, intent);
+                    finish();
                 }
-                else
+                else{
+                    _token = null;
+                    _login = null;
+                    _password = null;
                     submitButton.setProgress(-1);
+                }
             }
 
             @Override
             public void onFailure(Call<Result<String>> call, Throwable t) {
+                _token = null;
+                _login = null;
+                _password = null;
                 submitButton.setProgress(-1);
+                Log.e("SignIn error", t.getMessage());
             }
         });
     }
+
+
+
 }
 

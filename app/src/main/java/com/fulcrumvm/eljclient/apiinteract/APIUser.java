@@ -22,6 +22,6 @@ public interface APIUser {
     @GET("/api/People/{id}")
     Call<Result<User>> GetUser(@Path("id") String userId);
 
-    @GET("/api/People/{id}")
-    Call<Result<User>> GetUser(@Path("id") String userId, @Header("Authorization") String token);
+    @GET("api/People/me")
+    Call<Result<User>>GetMe(@Header("Authorization") String token);
 }

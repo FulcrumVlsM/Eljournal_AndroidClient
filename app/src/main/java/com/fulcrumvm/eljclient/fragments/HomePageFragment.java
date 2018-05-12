@@ -16,58 +16,53 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.fulcrumvm.eljclient.R;
+import com.fulcrumvm.eljclient.model.Result;
+import com.fulcrumvm.eljclient.model.Student;
+import com.fulcrumvm.eljclient.model.User;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link HomePageFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link HomePageFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class HomePageFragment extends Fragment {
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     ViewPager pager;
     PagerAdapter pagerAdapter;
+    private String token;
+    private User user;
+    private String apiPath;
 
     @NonNull
     FragmentManager fragmentManager;
 
-    private OnFragmentInteractionListener mListener;
+    private OnHomePageFragmentInteractionListener mListener;
 
     public HomePageFragment() {
         // Required empty public constructor
     }
 
 
-    public static HomePageFragment newInstance() {
+    public static HomePageFragment newInstance(@NonNull String token) {
         HomePageFragment fragment = new HomePageFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, "123");
-        args.putString(ARG_PARAM2, "456");
-        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        apiPath = getContext().getResources().getString(R.string.api_url);
+        token = getActivity().getPreferences(Context.MODE_PRIVATE).getString("token", null);
+        if(token != null)
+            User.GetMe(getUserCallback, token, apiPath);
+        else
+            user = new User();
+
     }
 
     @Override
@@ -89,47 +84,24 @@ public class HomePageFragment extends Fragment {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "Действие не назначено", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
 
         pager = v.findViewById(R.id.pager);
-        pagerAdapter = new MyFragmentPagerAdapter(getFragmentManager());
-
-        pager.setAdapter(pagerAdapter);
-        pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-
-            }
-        });
-
         return v;
-    }
-
-
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
     }
 
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
+        if(context instanceof OnHomePageFragmentInteractionListener){
+            mListener = (OnHomePageFragmentInteractionListener) context;
+        }
+        else
+            mListener = null;
     }
 
     @Override
@@ -139,8 +111,7 @@ public class HomePageFragment extends Fragment {
     }
 
 
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
+    public interface OnHomePageFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
     }
 
@@ -150,18 +121,21 @@ public class HomePageFragment extends Fragment {
 
         private String[] titles = {"Я студент", "Я преподаватель"};
 
+        private Fragment[] childFragments = {StudentPageFragment.newInstance(user, token),
+                                             TeacherPageFragment.newInstance("123","143")};
+
         public MyFragmentPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
         @Override
         public Fragment getItem(int position) {
-            return StudentPageFragment.newInstance();
+            return childFragments[position];
         }
 
         @Override
         public int getCount() {
-            return 2;
+            return childFragments.length;
         }
 
         @Nullable
@@ -170,4 +144,23 @@ public class HomePageFragment extends Fragment {
             return titles[position];
         }
     }
+
+    Callback<Result<User>> getUserCallback = new Callback<Result<User>>() {
+        @Override
+        public void onResponse(Call<Result<User>> call, Response<Result<User>> response) {
+            if(response.isSuccessful())
+                user = response.body().Data;
+            else
+                user = new User();
+
+            pagerAdapter = new MyFragmentPagerAdapter(getFragmentManager());
+            pager.setAdapter(pagerAdapter);
+        }
+
+        @Override
+        public void onFailure(Call<Result<User>> call, Throwable t) {
+            user = new User();
+            Log.e("getUserCallback", t.getMessage());
+        }
+    };
 }
