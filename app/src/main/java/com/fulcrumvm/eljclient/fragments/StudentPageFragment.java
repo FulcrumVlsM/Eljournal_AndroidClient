@@ -24,16 +24,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class StudentPageFragment extends Fragment implements View.OnClickListener, StudentGroupDataAdapter.OnItemClickListener{
+public class StudentPageFragment extends Fragment implements
+        View.OnClickListener,
+        StudentGroupDataAdapter.OnItemClickListener,
+        OnNeedUpdateDataListener{
     private static final String PARAM1 = "user";
     private static final String PARAM2 = "token";
 
     private static String apiPath;
 
+    //данные, загружаемые с сервера
     private User user;
     private String token;
     private List<StudentInfoSimple> studentList;
@@ -42,6 +48,7 @@ public class StudentPageFragment extends Fragment implements View.OnClickListene
     StudentGroupDataAdapter adapter;
 
     private OnStudentPageFragmentInteractionListener mListener;
+    private OnLoadDataListener loadListener;
 
     public StudentPageFragment() {
 
@@ -86,6 +93,32 @@ public class StudentPageFragment extends Fragment implements View.OnClickListene
     }
 
 
+    //метод для загрузки всех данных о студенте
+    private void loadData(){
+        token = mListener.GetToken();
+        User.GetMe(new Callback<Result<User>>() {
+            @Override
+            public void onResponse(Call<Result<User>> call, Response<Result<User>> response) {
+                if(response.isSuccessful()){
+                    user = response.body().Data;
+                    new StudentListMakerTask().execute(user.ID);
+                }
+                else{
+                    user = new User();
+                    loadListener.onFailure();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Result<User>> call, Throwable t) {
+                user = new User();
+                loadListener.onFailure();
+            }
+        }, token, apiPath);
+
+    }
+
+
     @Override
     public void onClick(View v) {
 
@@ -93,6 +126,7 @@ public class StudentPageFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onItemClickListener(View v) {
+        //TODO: здесь сделать переход к инфе студента по семестру
         int itemPosition = studentRecyclerView.getChildLayoutPosition(v);
         String semName = studentList.get(itemPosition).semester.Name;
         Toast.makeText(getContext(),semName,Toast.LENGTH_SHORT).show();
@@ -103,8 +137,15 @@ public class StudentPageFragment extends Fragment implements View.OnClickListene
         super.onAttach(context);
         if(context instanceof OnStudentPageFragmentInteractionListener)
             mListener = (OnStudentPageFragmentInteractionListener) context;
-        else
-            mListener = null;
+        if(context instanceof OnLoadDataListener)
+            loadListener = (OnLoadDataListener) context;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        studentList.clear();
+        adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -113,18 +154,16 @@ public class StudentPageFragment extends Fragment implements View.OnClickListene
         mListener = null;
     }
 
+    //уведомление от активности с требованием обновить данные
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        studentList.clear();
+    public void onNeedUpdate() {
+        //TODO: необходимо обновить данные
     }
 
     public interface OnStudentPageFragmentInteractionListener {
-        void OpenSubjectList(String semesterId, String studentId);
+        void OpenSubjectList(String studentId);
+        String GetToken();
     }
-
-
-
 
     private class StudentListMakerTask extends AsyncTask<String,Void,Void>{
         @Override
@@ -157,6 +196,12 @@ public class StudentPageFragment extends Fragment implements View.OnClickListene
         @Override
         protected void onPostExecute(Void aVoid) {
             adapter.notifyDataSetChanged();
+            loadListener.onLoadStateChanged(false);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            studentList.clear();
         }
     }
 }

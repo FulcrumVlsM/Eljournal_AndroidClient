@@ -26,10 +26,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.widget.Toast;
 
 import com.fulcrumvm.eljclient.apiinteract.APIFaculty;
 import com.fulcrumvm.eljclient.fragments.HomePageFragment;
+import com.fulcrumvm.eljclient.fragments.OnLoadDataListener;
+import com.fulcrumvm.eljclient.fragments.StudentPageFragment;
 import com.fulcrumvm.eljclient.model.Faculty;
 import com.fulcrumvm.eljclient.model.Result;
 import com.fulcrumvm.eljclient.model.User;
@@ -40,10 +42,16 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements
+        NavigationView.OnNavigationItemSelectedListener,
+        OnLoadDataListener,
+        StudentPageFragment.OnStudentPageFragmentInteractionListener{
 
     private Retrofit retrofit;
     private User user;
+    private String login;
+    private String password;
+    private String token;
 
     ViewPager pager;
     PagerAdapter pagerAdapter;
@@ -79,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        if(getLogin() == null || getPassword() == null || getToken() == null){
+        if(getLogin() == null || getPassword() == null || getTokenInStorage() == null){
             Intent intent = new Intent(this,LoginActivity.class);
             startActivityForResult(intent,LOGIN_REQUEST_CODE);
         }
@@ -89,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onResume() {
         super.onResume();
 
-        homeFragment = HomePageFragment.newInstance(getToken());
+        homeFragment = HomePageFragment.newInstance(getTokenInStorage());
         fTrans = getSupportFragmentManager().beginTransaction();
         fTrans.add(R.id.root_content_layout, homeFragment);
         fTrans.commit();
@@ -134,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (id == R.id.nav_student) {
 
         } else if (id == R.id.nav_home) {
-
+            Log.d("nav_student", "Выбрана 'МояСтраница'");
         } else if (id == R.id.nav_message) {
 
         } else if (id == R.id.nav_notification) {
@@ -168,15 +176,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d("MainActivity", "Сработал OnActivityResult");
         if(requestCode == LOGIN_REQUEST_CODE){
-            if(resultCode != RESULT_OK || data == null)
+            if(resultCode != RESULT_OK || data == null){
                 finish();
+                return;
+            }
 
-            String login = data.getStringExtra("login");
-            String password = data.getStringExtra("password");
-            String token = data.getStringExtra("token");
+            login = data.getStringExtra("login");
+            password = data.getStringExtra("password");
+            token = data.getStringExtra("token");
 
-            if(login == null && password == null && token == null)
+            if(login == null && password == null && token == null){
                 finish();
+                return;
+            }
 
             SharedPreferences.Editor editor = getPreferences(MODE_PRIVATE).edit();
             editor.putString("login", login);
@@ -188,13 +200,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
+    //данный метод должен вызывать индикатор загрузки поверх экрана приложения
+    @Override
+    public void onLoadStateChanged(boolean state) {
+        //TODO: индикатор еще не реализован
+        if (state)
+            Toast.makeText(this,"Идет загрузка",Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(this,"Загрузка завершена",Toast.LENGTH_SHORT).show();
+    }
+
+    //при ошибке загрузки данных. Хз, что делать. По ходу кинуть пользователю ошибку
+    @Override
+    public void onFailure() {
+        //TODO: метод еще не реализован
+    }
+
+    //реализация методов интерфейсов от фрагментов
+    @Override
+    public void OpenSubjectList(String studentId) {
+        //TODO: вывод фрагмента с данными по успеваемости студента
+    }
+
+    @Override
+    public String GetToken() {
+        return token;
+    }
+
     private String getLogin(){
         return getPreferences(MODE_PRIVATE).getString("login", null);
     }
     private String getPassword(){
         return getPreferences(MODE_PRIVATE).getString("password", null);
     }
-    private String getToken(){
+    private String getTokenInStorage(){
         return getPreferences(MODE_PRIVATE).getString("token", null);
     }
 
