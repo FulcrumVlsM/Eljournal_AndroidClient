@@ -31,6 +31,7 @@ import android.widget.Toast;
 import com.fulcrumvm.eljclient.apiinteract.APIFaculty;
 import com.fulcrumvm.eljclient.fragments.HomePageFragment;
 import com.fulcrumvm.eljclient.fragments.OnLoadDataListener;
+import com.fulcrumvm.eljclient.fragments.OnNeedUpdateDataListener;
 import com.fulcrumvm.eljclient.fragments.StudentPageFragment;
 import com.fulcrumvm.eljclient.model.Faculty;
 import com.fulcrumvm.eljclient.model.Result;
@@ -68,16 +69,6 @@ public class MainActivity extends AppCompatActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -91,16 +82,21 @@ public class MainActivity extends AppCompatActivity implements
             Intent intent = new Intent(this,LoginActivity.class);
             startActivityForResult(intent,LOGIN_REQUEST_CODE);
         }
+        else{
+            login = getLogin();
+            password = getPassword();
+            token = getTokenInStorage();
+        }
+
+        homeFragment = HomePageFragment.newInstance();
+        fTrans = getSupportFragmentManager().beginTransaction();
+        fTrans.add(R.id.root_content_layout, homeFragment);
+        fTrans.commit();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        homeFragment = HomePageFragment.newInstance(getTokenInStorage());
-        fTrans = getSupportFragmentManager().beginTransaction();
-        fTrans.add(R.id.root_content_layout, homeFragment);
-        fTrans.commit();
     }
 
     @Override
@@ -143,6 +139,10 @@ public class MainActivity extends AppCompatActivity implements
 
         } else if (id == R.id.nav_home) {
             Log.d("nav_student", "Выбрана 'МояСтраница'");
+            homeFragment = HomePageFragment.newInstance();
+            fTrans = getSupportFragmentManager().beginTransaction();
+            fTrans.add(R.id.root_content_layout, homeFragment);
+            fTrans.commit();
         } else if (id == R.id.nav_message) {
 
         } else if (id == R.id.nav_notification) {
@@ -195,7 +195,8 @@ public class MainActivity extends AppCompatActivity implements
             editor.putString("password", password);
             editor.putString("token", token);
             editor.commit();
-            recreate();
+
+            notifyDataUpdated();
         }
     }
 
@@ -216,16 +217,17 @@ public class MainActivity extends AppCompatActivity implements
         //TODO: метод еще не реализован
     }
 
+    @Override
+    public String getToken() {
+        return token;
+    }
+
     //реализация методов интерфейсов от фрагментов
     @Override
     public void OpenSubjectList(String studentId) {
         //TODO: вывод фрагмента с данными по успеваемости студента
     }
 
-    @Override
-    public String GetToken() {
-        return token;
-    }
 
     private String getLogin(){
         return getPreferences(MODE_PRIVATE).getString("login", null);
@@ -235,6 +237,11 @@ public class MainActivity extends AppCompatActivity implements
     }
     private String getTokenInStorage(){
         return getPreferences(MODE_PRIVATE).getString("token", null);
+    }
+
+    private void notifyDataUpdated(){
+        ((OnNeedUpdateDataListener) homeFragment).onNeedUpdate();
+        //здесь будут и другие фрагменты, которые вызывает вызывает данное активити
     }
 
     private void logOut(){

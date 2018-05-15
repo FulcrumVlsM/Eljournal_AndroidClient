@@ -34,8 +34,6 @@ public class StudentPageFragment extends Fragment implements
         View.OnClickListener,
         StudentGroupDataAdapter.OnItemClickListener,
         OnNeedUpdateDataListener{
-    private static final String PARAM1 = "user";
-    private static final String PARAM2 = "token";
 
     private static String apiPath;
 
@@ -55,12 +53,8 @@ public class StudentPageFragment extends Fragment implements
     }
 
 
-    public static StudentPageFragment newInstance(User user, String token) {
+    public static StudentPageFragment newInstance() {
         StudentPageFragment fragment = new StudentPageFragment();
-        Bundle args = new Bundle();
-        args.putSerializable(PARAM1,user);
-        args.putString(PARAM2, token);
-        fragment.setArguments(args);
         return fragment;
     }
 
@@ -69,14 +63,7 @@ public class StudentPageFragment extends Fragment implements
         super.onCreate(savedInstanceState);
         apiPath = getActivity().getApplicationContext().getResources().getString(R.string.api_url);
         studentList = new ArrayList<>();
-        if (getArguments() != null) {
-            user = (User) getArguments().getSerializable(PARAM1);
-            token = getArguments().getString(PARAM2);
-
-            //в отдельном потоке наполняю список по данным обучения
-            StudentListMakerTask studentListMakerTask = new StudentListMakerTask();
-            studentListMakerTask.execute(user.ID);
-        }
+        loadData();
     }
 
     @Override
@@ -95,7 +82,7 @@ public class StudentPageFragment extends Fragment implements
 
     //метод для загрузки всех данных о студенте
     private void loadData(){
-        token = mListener.GetToken();
+        token = loadListener.getToken();
         User.GetMe(new Callback<Result<User>>() {
             @Override
             public void onResponse(Call<Result<User>> call, Response<Result<User>> response) {
@@ -124,6 +111,7 @@ public class StudentPageFragment extends Fragment implements
 
     }
 
+    //при нажатии на элемент списка RecyclerView
     @Override
     public void onItemClickListener(View v) {
         //TODO: здесь сделать переход к инфе студента по семестру
@@ -157,12 +145,11 @@ public class StudentPageFragment extends Fragment implements
     //уведомление от активности с требованием обновить данные
     @Override
     public void onNeedUpdate() {
-        //TODO: необходимо обновить данные
+        loadData();
     }
 
     public interface OnStudentPageFragmentInteractionListener {
         void OpenSubjectList(String studentId);
-        String GetToken();
     }
 
     private class StudentListMakerTask extends AsyncTask<String,Void,Void>{
@@ -203,5 +190,12 @@ public class StudentPageFragment extends Fragment implements
         protected void onPreExecute() {
             studentList.clear();
         }
+    }
+
+
+    @Override
+    public String toString() {
+        //TODO: это вот вынести в ресурсы
+        return "Учеба";
     }
 }

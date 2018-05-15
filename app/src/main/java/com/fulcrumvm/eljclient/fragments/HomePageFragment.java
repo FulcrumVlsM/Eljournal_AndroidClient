@@ -30,39 +30,29 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class HomePageFragment extends Fragment {
+public class HomePageFragment extends Fragment implements OnNeedUpdateDataListener {
 
     ViewPager pager;
     PagerAdapter pagerAdapter;
-    private String token;
-    private User user;
-    private String apiPath;
 
-    @NonNull
-    FragmentManager fragmentManager;
+    private StudentPageFragment studentPageFragment;
+    private TeacherPageFragment teacherPageFragment;
 
-    private OnHomePageFragmentInteractionListener mListener;
 
     public HomePageFragment() {
         // Required empty public constructor
     }
 
 
-    public static HomePageFragment newInstance(@NonNull String token) {
-        HomePageFragment fragment = new HomePageFragment();
-        return fragment;
+    public static HomePageFragment newInstance() {
+        return new HomePageFragment();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        apiPath = getContext().getResources().getString(R.string.api_url);
-        token = getActivity().getPreferences(Context.MODE_PRIVATE).getString("token", null);
-        if(token != null)
-            User.GetMe(getUserCallback, token, apiPath);
-        else
-            user = new User();
-
+        studentPageFragment = StudentPageFragment.newInstance();
+        teacherPageFragment = TeacherPageFragment.newInstance("123","123");
     }
 
     @Override
@@ -90,41 +80,28 @@ public class HomePageFragment extends Fragment {
         });
 
         pager = v.findViewById(R.id.pager);
+        pagerAdapter = new MyFragmentPagerAdapter(getFragmentManager());
+        pager.setAdapter(pagerAdapter);
         return v;
     }
 
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if(context instanceof OnHomePageFragmentInteractionListener){
-            mListener = (OnHomePageFragmentInteractionListener) context;
-        }
-        else
-            mListener = null;
+    public void onNeedUpdate() {
+        if(studentPageFragment instanceof OnNeedUpdateDataListener)
+            ((OnNeedUpdateDataListener) studentPageFragment).onNeedUpdate();
+        if(teacherPageFragment instanceof OnNeedUpdateDataListener)
+            ((OnNeedUpdateDataListener) teacherPageFragment).onNeedUpdate();
     }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-
-    public interface OnHomePageFragmentInteractionListener {
-        void onFragmentInteraction(Uri uri);
-    }
-
-
 
     private class MyFragmentPagerAdapter extends FragmentPagerAdapter {
 
+        //TODO: нужно вынести в ресурсы как массив
         private String[] titles = {"Я студент", "Я преподаватель"};
 
-        private Fragment[] childFragments = {StudentPageFragment.newInstance(user, token),
-                                             TeacherPageFragment.newInstance("123","143")};
+        private Fragment[] childFragments = {studentPageFragment, teacherPageFragment};
 
-        public MyFragmentPagerAdapter(FragmentManager fm) {
+        MyFragmentPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
@@ -141,26 +118,7 @@ public class HomePageFragment extends Fragment {
         @Nullable
         @Override
         public CharSequence getPageTitle(int position) {
-            return titles[position];
+            return childFragments[position].toString();
         }
     }
-
-    Callback<Result<User>> getUserCallback = new Callback<Result<User>>() {
-        @Override
-        public void onResponse(Call<Result<User>> call, Response<Result<User>> response) {
-            if(response.isSuccessful())
-                user = response.body().Data;
-            else
-                user = new User();
-
-            pagerAdapter = new MyFragmentPagerAdapter(getFragmentManager());
-            pager.setAdapter(pagerAdapter);
-        }
-
-        @Override
-        public void onFailure(Call<Result<User>> call, Throwable t) {
-            user = new User();
-            Log.e("getUserCallback", t.getMessage());
-        }
-    };
 }
